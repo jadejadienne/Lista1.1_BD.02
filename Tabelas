@@ -172,3 +172,25 @@ LOOP
    
     RETURN total_pontos;
   
+
+             --Questões sobre Procedimentos Armazenados (Stored Procedures)--
+-- Q1 Crie um procedimento chamado AtualizarEstoqueEmMassa que receba uma lista de ProdutoID e uma quantidade a ser adicionada ao estoque de cada produto. O
+--procedimento deve usar um loop FOR para percorrer cada ProdutoID e atualizar o estoque.
+ 
+CREATE OR REPLACE PROCEDURE AtualizarEstoqueEmMassa(
+    Proc_produto_ids INT[],
+    Proc_quant_add INT
+)
+LANGUAGE plpgsql
+AS $$
+DECLARE
+    Produto_id INT,
+BEGIN
+    FOR Produto_id IN SELECT UNNEST(Proc_produto_ids)
+    LOOP
+        UPDATE estoque
+        SET quantidade = quantidade + Proc_quant_add
+        WHERE Produto_id = Produto_id;
+    END LOOP;
+END;
+$$;
