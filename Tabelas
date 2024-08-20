@@ -116,6 +116,24 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+-- Q5 -- Crie uma função chamada CalcularFrete que receba o valor total de um pedido e a cidade do cliente. Se a cidade for "São Paulo", o frete deve ser 5% do valor do pedido; para outras cidades, deve ser 10%. Use IF ELSE para definir a taxa de frete.
+
+CREATE OR REPLACE FUNCTION CalcularFrete(ValorTotal DECIMAL, Cidade VARCHAR)
+RETURNs DECIMAL AS $$
+DECLARE
+    Frete DECIMAL;
+BEGIN
+ IF Cidade = 'São Paulo' THEN
+       Frete := ValorTotal * 0.05; 
+    ELSE
+      Frete := ValorTotal * 0.10;
+    END IF;
+    RETURN Frete;
+    
+END;
+$$ LANGUAGE plpgsql;
+  
+
 
   
 
