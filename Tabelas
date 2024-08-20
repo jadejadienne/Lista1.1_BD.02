@@ -142,7 +142,33 @@ BEGIN
     
 END;
 $$;
-  
 
+-- Tabela 06 - Crie uma função chamada CalcularPontos que receba um ClienteID e percorra todos os pedidos do cliente. Para cada pedido, se o valor total for maior que R$ 100, adicione 10
+-- pontos; se for menor ou igual, adicione 5 pontos. Retorne o total de pontos acumulados
+--pelo cliente. Use FOR e IF ELSE.
 
+DROP FUNCTION IF EXISTS Calcularpontos_po; 
+CREATE or REPLACE FUNCTION Calcularpontos_po(cliente_id INT) 
+
+LANGUAGE plpgsql
+RETURN INT
+AS $$
+   valorpedido NUMERIC;
+   pedido_record RECORD;
+BEGIN
+FOR pedido_record IN 
+    SELECT Valortotal
+    from pedidos
+    WHERE cliente_id = cliente_id
+LOOP
+        valor_pedido := pedido_record.valor_total;
+
+        IF valor_pedido > 100 THEN
+            total_pontos := total_pontos + 10;
+        ELSE
+            total_pontos := total_pontos + 5;
+        END IF;
+    END LOOP;
+   
+    RETURN total_pontos;
   
