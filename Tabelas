@@ -1,22 +1,48 @@
-SELECT * FROM demo;
+-- Tabela 01 - Armazena informações sobre os clientes.
 
-/*Armazenar informações sobre os clientes criando suas tabelas e suas colunas*/
-
-TABLE clientes(
-  Clienteid INT PRIMARY KEY AUTOINCREMENT,
-  Nome VARCHAR(100),
-  Email VARCHAR(100),
-  DataNacimento DATE,
-  Cidade VARCHAR(50)
+CREATE TABLE clientes(
+  Clienteid serial PRIMARY KEY,
+  Nome VARCHAR(100) NOT NULL,
+  Email VARCHAR(100) UNIQUE NOT NULL,
+  DataNacimento DATE NOT NULL,
+  Cidade VARCHAR(50) NOT NULL
   );
   
-  /*Inserindo dados na tabela cliente e testando pra ver se está funcionando*/
+  -- Tabela 02 - Armazena informações sobre os produtos.
   
-  INSERT INTO clientes(Nome, Email, DataNacimento, Cidade)
-  VALUES ('Jadienne silva', 'jadiennesilva@gmail.com', '18-07-2003', 'Icó ceará');
-          
-  /*consultar dados*/
-          
- SELECT * FROM clientes;
-          
-        
+  CREATE TABLE Produtos(
+    
+    Produtoid serial PRIMARY KEY,
+    Nomeproduto VARCHAR(100) NOT NULL,
+    Categoria VARCHAR(60),
+    Preco DECIMAL(10,2),
+    Estoque INT 
+    
+    );
+  
+    -- Tabela 03 - Armazena informações sobre os pedidos feitos pelos clientes.
+    
+ CREATE TABLE Pedidos(
+   Pedidosid SERIAL PRIMARY KEY,
+   Clienteid INT REFERENCES clientes(Clienteid),
+   Datapedido DATE,
+   Valortotal DECIMAL(10,2)
+   
+   );
+
+-- Tabela 04 - Armazena detalhes dos itens de cada pedido.
+
+CREATE TABLE Itenspedido(
+  Itemid Serial PRIMARY KEY,
+  Pedidoid INT REFERENCES Pedidos(Pedidosid),
+  Produtoid INT REFERENCES produtos(Produtoid),
+  Quantidades INT,
+  Precounico DECIMAL(10,2)
+  
+  );
+  
+
+
+
+
+  
