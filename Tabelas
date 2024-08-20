@@ -41,7 +41,60 @@ CREATE TABLE Itenspedido(
   
   );
   
+                -- Questões sobre Funções (Functions):--
+                
+  -- Q1 Crie uma função chamada CalcularIdade que receba a data de nascimento de um cliente e retorne à idade atual.
+  
+    CREATE OR REPLACE FUNCTION CalcularIdade(Data_nacimento DATE)
+  RETURNS INT AS $$
+  
+  DECLARE
+      Idade INT;
+  BEGIN
+      Idade := EXTRACT(YEAR FROM AGE(CURRENT_DATE, Data_nacimento));
+      RETURN Idade;
+  END;
+  $$ LANGUAGE plpgsql;
+  
+  
+   -- Q2 Crie uma função chamada VerificarEstoque que receba o ProdutoID e retorne a quantidade em estoque daquele produto.
+    
+    CREATE OR REPLACE FUNCTION Verificarestoque(produto_id INT)
+ RETURNS INT AS $$
+ DECLARE 
+       Quant_estoq INT;
+ BEGIN
+    SELECT Estoq INTO Quant_estoq
+    FROM produtos
+    WHERE produto_id;
+    
+    RETURN Quant_estoq; 
+END;
+$$ LANGUAGE plpgsql;
 
+-- Q3 Crie uma função chamada CalcularDesconto que receba o ProdutoID e um percentual de
+---desconto, e retorne o preço final do produto após aplicar o desconto.
+    
+ CREATE OR REPLACE FUNCTION CalcularDes(Produto_id INT, Percentual_desc DECIMAL)
+RETURNS DECIMAL AS $$
+DECLARE
+    Preco_orig DECIMAL;
+    Preco_final DECIMAL;
+BEGIN
+   
+    SELECT Preco INTO Preco_orig
+    FROM Produtos
+    WHERE produtoid = Produto_id;
+
+
+    preco_final := Preco_orig * (1 - Percentual_desc / 100);
+
+    RETURN Preco_final;
+END;
+$$ LANGUAGE plpgsql;
+
+  
+  
 
 
 
