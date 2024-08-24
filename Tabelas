@@ -196,3 +196,128 @@ BEGIN
     END LOOP;
 END;
 $$;
+
+-- 2. Crie um procedimento chamado InserirCliente que insira um novo cliente na tabela Clientes.
+
+CREATE OR REPLACE PROCEDURE InserirCliente(
+    p_nome TEXT,
+    p_email TEXT,
+    p_telefone TEXT
+)
+LANGUAGE plpgsql
+AS $$
+BEGIN
+    INSERT INTO Clientes (nome, email, telefone)
+    VALUES (p_nome, p_email, p_telefone);
+END;
+$$;
+
+--3. Crie um procedimento chamado RealizarPedido que insira um novo pedido na tabela Pedidos e os itens correspondentes na tabela ItensPedido. 
+
+CREATE OR REPLACE PROCEDURE RealizarPedido(
+    p_data DATE,
+    p_cliente_id INT,
+    p_itens JSONB 
+)
+LANGUAGE plpgsql
+AS $$
+DECLARE
+    v_pedido_id INT; 
+    v_item JSONB;
+BEGIN
+    INSERT INTO Pedidos (data, cliente_id)
+    VALUES (p_data, p_cliente_id)
+    RETURNING id INTO v_pedido_id;
+
+    FOR v_item IN SELECT * FROM jsonb_array_elements(p_itens)
+    LOOP
+        INSERT INTO ItensPedido (pedido_id, produto_id, quantidade, preco)
+        VALUES (
+            v_pedido_id,
+            (v_item->>'produto_id')::INT,
+            (v_item->>'quantidade')::INT,
+            (v_item->>'preco')::DECIMAL
+        );
+    END LOOP;
+
+EXCEPTION
+    WHEN OTHERS THEN
+        ROLLBACK;
+        RAISE;
+END;
+$$;
+
+-- 4. Crie um procedimento chamado ExcluirCliente que exclua um cliente da tabela Clientes e todos os pedidos associados a esse cliente.
+
+CREATE OR REPLACE PROCEDURE ExcluirCliente(
+    p_cliente_id INT 
+)
+LANGUAGE plpgsql
+AS $$
+BEGIN
+  
+    DELETE FROM Pedidos
+    WHERE cliente_id = p_cliente_id;
+
+    DELETE FROM Clientes
+    WHERE id = p_cliente_id;
+
+EXCEPTION
+
+    WHEN OTHERS THEN
+        ROLLBACK;
+        RAISE;
+END;
+$$;
+
+-- 5 Crie um procedimento chamado AtualizarPrecoProduto que receba o ProdutoID e o novo preço, e atualize o preço do produto na tabela Produtos
+
+CREATE OR REPLACE PROCEDURE AtualizarPrecoProduto(
+    p_produto_id INT,   
+    p_novo_preco DECIMAL 
+)
+LANGUAGE plpgsql
+AS $$
+BEGIN
+
+    UPDATE Produtos
+    SET preco = p_novo_preco
+    WHERE id = p_produto_id;
+
+    IF NOT FOUND THEN
+        RAISE EXCEPTION 'Produto com ID % não encontrado', p_produto_id;
+    END IF;
+
+END;
+$$;
+
+-- 6. Crie um procedimento chamado InserirClienteComVerificacao que receba os dados de um cliente (Nome, Email, DataNascimento, Cidade). Antes de inserir o cliente, verifique se o email já existe na tabela Clientes. Se existir, não insira e retorne uma mensagem de erro. Use DECLARE para declarar variáveis e IF ELSE para a verificação.
+
+CREATE OR REPLACE PROCEDURE InserirClienteComVerificacao(
+    p_nome TEXT,
+    p_email TEXT,
+    p_data_nascimento DATE,
+    p_cidade TEXT
+)
+LANGUAGE plpgsql
+AS $$
+DECLARE
+    v_email_existente BOOLEAN;
+BEGIN
+
+    SELECT EXISTS (
+        SELECT 1
+        FROM Clientes
+        WHERE email = p_email
+    ) INTO v_email_existente;
+
+    IF v_email_existente THEN
+      
+        RAISE EXCEPTION 'O e-mail % já está registrado.', p_email;
+    ELSE
+       
+        INSERT INTO Clientes (nome, email, data_nascimento, cidade)
+        VALUES (p_nome, p_email, p_data_nascimento, p_cidade);
+    END IF;
+END;
+$$;
