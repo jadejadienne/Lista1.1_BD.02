@@ -46,9 +46,7 @@ CREATE TABLE Itenspedido(
   -- Q1 Crie uma função chamada CalcularIdade que receba a data de nascimento de um cliente e retorne à idade atual.
   
     CREATE OR REPLACE FUNCTION CalcularIdade(Data_nacimento DATE)
-  RETURNS INT 
-  LANGUAGE plpgsql
-  AS $$
+  RETURNS INT AS $$
   
   DECLARE
       Idade INT;
@@ -56,15 +54,13 @@ CREATE TABLE Itenspedido(
       Idade := EXTRACT(YEAR FROM AGE(CURRENT_DATE, Data_nacimento));
       RETURN Idade;
   END;
-  $$;
+  $$ LANGUAGE plpgsql;
   
   
    -- Q2 Crie uma função chamada VerificarEstoque que receba o ProdutoID e retorne a quantidade em estoque daquele produto.
     
     CREATE OR REPLACE FUNCTION Verificarestoque(produto_id INT)
- RETURNS INT 
- LANGUAGE plpgsql
- AS $$
+ RETURNS INT AS $$
  DECLARE 
        Quant_estoq INT;
  BEGIN
@@ -74,36 +70,33 @@ CREATE TABLE Itenspedido(
     
     RETURN Quant_estoq; 
 END;
-$$;
+$$ LANGUAGE plpgsql;
 
 -- Q3 Crie uma função chamada CalcularDesconto que receba o ProdutoID e um percentual de desconto, e retorne o preço final do produto após aplicar o desconto.
 
 CREATE OR REPLACE FUNCTION CalcularDesconto(Produto_id INT, Percentual_desc DECIMAL)
-RETURNS DECIMAL
+RETURNS DECIMAL 
 LANGUAGE plpgsql
 AS $$
 DECLARE
-    Preco_origInal DECIMAL;
-    Preco_final DECIMAL;
+    Preco_original DECIMAL;
+    Preco_final DECIMAL;
 BEGIN
-    SELECT Preco INTO Preco_original
-    FROM Produtos
-    WHERE produtoid = Produto_id;
+    SELECT Preco INTO Preco_original
+    FROM Produtos
+    WHERE produtoid = Produto_id;
     
     IF NOT FOUND THEN
         RAISE EXCEPTION 'Produto com ID % não encontrado', Produto_id;
-        IF NOT FOUND THEN
     END IF;
-        
-    preco_final := Preco_original * (1 - Percentual_desc / 100);
-
-    RETURN Preco_final;
+    
+    Preco_final := Preco_original * (1 - Percentual_desc / 100);
+    
+    RETURN Preco_final;
 END;
 $$;
-
   
- -- Q4 4. Crie uma função chamada ObterNomeCliente que receba o ClienteID e retorne o nome
--- completo do cliente.
+ -- Q4 4. Crie uma função chamada ObterNomeCliente que receba o ClienteID e retorne o nome completo do cliente.
 
 CREATE OR REPLACE FUNCTION ObterNomeCliente(clienteID INT)
 RETURNs VARCHAR 
@@ -124,7 +117,10 @@ BEGIN
 END;
 $$;
 
--- Q5 -- Crie uma função chamada CalcularFrete que receba o valor total de um pedido e a cidade do cliente. Se a cidade for "São Paulo", o frete deve ser 5% do valor do pedido; para outras cidades, deve ser 10%. Use IF ELSE para definir a taxa de frete.
+
+ -- Q5 -- Crie uma função chamada CalcularFrete que receba o valor total de um pedido e a cidade
+--do cliente. Se a cidade for "São Paulo", o frete deve ser 5% do valor do pedido; para outras
+--cidades, deve ser 10%. Use IF ELSE para definir a taxa de frete.
 
 CREATE OR REPLACE FUNCTION CalcularFrete(ValorTotal DECIMAL, Cidade VARCHAR)
 RETURNs DECIMAL
@@ -142,55 +138,61 @@ BEGIN
     
 END;
 $$;
-
--- Tabela 06 - Crie uma função chamada CalcularPontos que receba um ClienteID e percorra todos os pedidos do cliente. Para cada pedido, se o valor total for maior que R$ 100, adicione 10
--- pontos; se for menor ou igual, adicione 5 pontos. Retorne o total de pontos acumulados
---pelo cliente. Use FOR e IF ELSE.
-
-DROP FUNCTION IF EXISTS Calcularpontos_po; 
-CREATE or REPLACE FUNCTION Calcularpontos_po(cliente_id INT) 
-
-LANGUAGE plpgsql
-RETURN INT
-AS $$
-   valorpedido NUMERIC;
-   pedido_record RECORD;
-BEGIN
-FOR pedido_record IN 
-    SELECT Valortotal
-    from pedidos
-    WHERE cliente_id = cliente_id
-LOOP
-        valor_pedido := pedido_record.valor_total;
-
-        IF valor_pedido > 100 THEN
-            total_pontos := total_pontos + 10;
-        ELSE
-            total_pontos := total_pontos + 5;
-        END IF;
-    END LOOP;
-   
-    RETURN total_pontos;
   
+ -- Q6 -- Crie uma função chamada CalcularPontos que receba um ClienteID e percorra todos os
+--pedidos do cliente. Para cada pedido, se o valor total for maior que R$ 100, adicione 10
+--pontos; se for menor ou igual, adicione 5 pontos. Retorne o total de pontos acumulados
+-- pelo cliente. Use FOR e IF ELSE. 
 
-             --Questões sobre Procedimentos Armazenados (Stored Procedures)--
+CREATE OR REPLACE FUNCTION CalcularPontos(ClienteID INT)
+RETURNS INT 
+LANGUAGE plpgsql
+AS $$
+DECLARE
+    TotalPontos INT := 0;
+    ValorTotal DECIMAL;
+    Pedido RECORD;
+BEGIN
+  
+    FOR Pedido IN
+        SELECT Valortotal
+        FROM Pedidos
+        WHERE Clienteid = ClienteID
+    LOOP
+ 
+        IF Pedido.Valortotal > 100 THEN
+            TotalPontos := TotalPontos + 10;
+        ELSE
+            TotalPontos := TotalPontos + 5;
+        END IF;
+    END LOOP;
+
+    RETURN TotalPontos;
+END;
+$$;
+
+  
+    --Questões sobre Procedimentos Armazenados (Stored Procedures)--
 -- Q1 Crie um procedimento chamado AtualizarEstoqueEmMassa que receba uma lista de ProdutoID e uma quantidade a ser adicionada ao estoque de cada produto. O
 --procedimento deve usar um loop FOR para percorrer cada ProdutoID e atualizar o estoque.
  
 CREATE OR REPLACE PROCEDURE AtualizarEstoqueEmMassa(
-    Proc_produto_ids INT[],
-    Proc_quant_add INT
+    Proc_produto_ids INT[],     
+    Proc_quant_add INT           
 )
 LANGUAGE plpgsql
 AS $$
 DECLARE
-    Produto_id INT,
+    Produto_id INT;             
 BEGIN
-    FOR Produto_id IN SELECT UNNEST(Proc_produto_ids)
+
+    FOR Produto_id IN
+        SELECT UNNEST(Proc_produto_ids)
     LOOP
+    
         UPDATE estoque
         SET quantidade = quantidade + Proc_quant_add
-        WHERE Produto_id = Produto_id;
+        WHERE produto_id = Produto_id;
     END LOOP;
 END;
 $$;
